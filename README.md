@@ -2,8 +2,6 @@
 
 Welcome to repository created on purpose of Disaster Response System.
 
-<img vertical-align="middle" src="img/app2.PNG"/> 
-
 ## Motivation
 Novadays, social media became one of the most important medium of spread of disaster informations. Some of the posts
 can be classified as help requests. However, the requests may be connected with flood, earthquakes and many other different phenomenas.
@@ -21,6 +19,8 @@ The project strongly focuses on demonstrating the process of data preparation, m
 
 *The project is a part of the Udacity Data Science Nanodegree Program.*
 
+<img vertical-align="middle" src="img/app2.PNG"/> 
+
 ## Sources
 The Multilingual Disaster Response Messages dataset used in the project comes from **Appen** website 
 and can be accessed on https://appen.com/datasets/combined-disaster-response-data/.
@@ -35,7 +35,7 @@ The structure of the repository is as follows:
 ```
 - app/
     - __init__.py
-    - app.py                    # Flask app controler
+    - app.py                    # Flask app controller
     - plotting_helpers
     - templates/
         - go.html
