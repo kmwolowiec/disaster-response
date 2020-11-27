@@ -50,7 +50,8 @@ The structure of the repository is as follows:
     - train_classifier.py       # Training script
     - utils.py
 - img/                          # README.md images
--utils.py               
+- environment.yml               # Conda environment
+- utils.py               
  ```
 ## How to?
 
