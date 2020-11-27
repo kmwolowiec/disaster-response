@@ -67,8 +67,7 @@ If You have already conda installed, just hit:
 ### ETL pipeline
 ETL pipeline cleans data and stores in database
 ```
-> cd data
-> python process_data.py disaster_messages.csv disaster_categories.csv DisasterResponse.db
+> python data\process_data.py data\disaster_messages.csv data\disaster_categories.csv data\DisasterResponse.db
 ```
 
 ### ML pipeline
