@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import sqlite3
 
+
 def load_data(messages_filepath, categories_filepath) -> pd.DataFrame:
     """Load and preprocess messages and labels.
 
@@ -32,12 +33,21 @@ def load_data(messages_filepath, categories_filepath) -> pd.DataFrame:
 
 
 def clean_data(df):
+
+    # 'related' label has 3 unique values: 0, 1, 2
+    # The '2' comes from uncorrect mapping and should be replaced by '0'
+    # According to: https://knowledge.udacity.com/questions/64417
+    df.loc[df['related'] == 2, 'related'] = 0
+
+    # 'child_alone' label has only one unique value: 0 so it's useless
+    df = df.drop('child_alone', axis=1)
+
     return df
 
 
 def save_data(df, database_filename):
     conn = sqlite3.connect(f'{database_filename}')
-    df.to_sql('dataset', conn)
+    df.to_sql('dataset', conn, if_exists='replace', index=False)
 
 
 def main():
