@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, accuracy_score, make_scorer
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -32,39 +32,50 @@ def load_data(database_filepath):
 
 # https://scikit-learn.org/stable/modules/multiclass.html#multiclass
 #https://github.com/scikit-learn-contrib/project-template/blob/master/skltemplate/_template.py
-def build_model():
-    f1_scorer = make_scorer(f1_score, average='weighted')
+def build_model(optimize=False):
 
-    search_space = {
-        "tfidf__smooth_idf": Categorical([True, False]),
-        "tfidf__min_df": Integer(2, 100),
-        "tfidf__norm": Categorical(['l1', 'l2']),
-        "tfidf__sublinear_tf": Categorical([True, False]),
-        "clf__estimator__max_depth": Integer(3, 15),
-        "clf__estimator__max_features": Categorical(['auto', 'sqrt', 'log2']),
-        "clf__estimator__min_samples_leaf": Integer(2, 10),
-        "clf__estimator__min_samples_split": Integer(2, 10),
-        "clf__estimator__n_estimators": Integer(1000, 5000),
-        "clf__estimator__class_weight": Categorical(['balanced', 'balanced_subsample'])
-    }
+    if optimize:
+        model = Pipeline([
+            ('tfidf', TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 2))),
+            ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight="balanced", n_jobs=-1)))
+        ], verbose=True)
 
-    model = Pipeline([
-        ('tfidf', TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 2))),
-        ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight="balanced", n_jobs=-1)))
-    ], verbose=True)
+        search_space = {
+            "tfidf__smooth_idf": Categorical([True, False]),
+            "tfidf__min_df": Integer(2, 100),
+            "tfidf__norm": Categorical(['l1', 'l2']),
+            "tfidf__sublinear_tf": Categorical([True, False]),
+            "clf__estimator__max_depth": Integer(3, 15),
+            "clf__estimator__max_features": Categorical(['auto', 'sqrt', 'log2']),
+            "clf__estimator__min_samples_leaf": Integer(2, 10),
+            "clf__estimator__min_samples_split": Integer(2, 10),
+            "clf__estimator__n_estimators": Integer(1000, 5000),
+            "clf__estimator__class_weight": Categorical(['balanced', 'balanced_subsample'])
+        }
 
-    # create grid search object
-    cv = BayesSearchCV(model,
-                       search_spaces=search_space,
-                       n_iter=50,
-                       scoring=f1_scorer,
-                       n_jobs=-1,
-                       verbose=3,
-                       cv=2,
-                       return_train_score=True,
-                       random_state=42)
+        f1_scorer = make_scorer(f1_score, average='weighted')
 
-    return cv
+        # create grid search object
+        cv_model = BayesSearchCV(model,
+                           search_spaces=search_space,
+                           n_iter=50,
+                           scoring=f1_scorer,
+                           n_jobs=-1,
+                           verbose=3,
+                           cv=2,
+                           return_train_score=True,
+                           random_state=42)
+
+        return cv_model
+
+    else:
+        model = Pipeline([
+            ('tfidf', TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 2))),
+            ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight="balanced", n_jobs=-1,
+                                                                 n_estimators=500, max_depth=5)))
+        ], verbose=True)
+
+        return model
 
 
 def evaluate_model(model, X_test, Y_test):
@@ -106,14 +117,18 @@ def save_model(model, model_filepath):
 
 
 def main():
-    if len(sys.argv) == 3:
-        database_filepath, model_filepath = sys.argv[1:]
+    if len(sys.argv) in [3, 4]:
+
+        database_filepath, model_filepath = sys.argv[1:2]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
         
         print('Building model...')
-        model = build_model()
+        if '--optimize' in sys.argv:
+            model = build_model(optimize=True)
+        else:
+            model = build_model(optimize=False)
         
         print('Training model...')
         model.fit(X_train, Y_train)
@@ -130,7 +145,9 @@ def main():
         print('Please provide the filepath of the disaster messages database '\
               'as the first argument and the filepath of the pickle file to '\
               'save the model to as the second argument. \n\nExample: python '\
-              'train_classifier.py ../data/DisasterResponse.db classifier.pkl')
+              'train_classifier.py ../data/DisasterResponse.db classifier.pkl'\
+              'if training have to include hyperparameters tuning, then use:'\
+              'train_classifier.py ../data/DisasterResponse.db classifier.pkl --optimize')
 
 
 if __name__ == '__main__':
