@@ -92,7 +92,7 @@ def build_model(optimize=False):
         return model
 
 
-def evaluate_model(model, X_test, Y_test) -> pd.DataFrame:
+def evaluate_model(model, X_test, Y_test, database_filepath) -> pd.DataFrame:
     """Perform prediction, calculate metrics (f1 score, precision, recall, accuracy)
         and print evaluation report.
 
@@ -124,7 +124,7 @@ def evaluate_model(model, X_test, Y_test) -> pd.DataFrame:
 
     df_report = np.round(pd.DataFrame(reports).set_index('feature'), 3)
     df_report.insert(0, 'training_timestamp', dt.now().strftime('%Y-%m-%d, %H:%M:%S'))
-    conn = sqlite3.connect('../data/DisasterResponse.db')
+    conn = sqlite3.connect(database_filepath)
     #report_filename = 'evaluation_report.csv'
     df_report.to_sql('TrainingEvaluation', conn, if_exists='append')
     # if report_filename in os.listdir(os.getcwd()):
@@ -136,7 +136,7 @@ def evaluate_model(model, X_test, Y_test) -> pd.DataFrame:
 
 def save_model(model, model_filepath):
     """Perform pickle dump of the model"""
-    
+
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
@@ -158,7 +158,7 @@ def main():
         model.fit(X_train, Y_train)
         
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test)
+        evaluate_model(model, X_test, Y_test, database_filepath)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
         save_model(model, model_filepath)
@@ -166,12 +166,13 @@ def main():
         print('Trained model saved!')
 
     else:
-        print('Please provide the filepath of the disaster messages database '\
-              'as the first argument and the filepath of the pickle file to '\
-              'save the model to as the second argument. \n\nExample: python '\
-              'train_classifier.py ../data/DisasterResponse.db classifier.pkl'\
-              'if training have to include hyperparameters tuning, then use:'\
-              'train_classifier.py ../data/DisasterResponse.db classifier.pkl --optimize')
+        print('''Please provide the filepath of the disaster messages database
+as the first argument and the filepath of the pickle file to
+save the model to as the second argument. \n
+Example: 
+    > python train_classifier.py ../data/DisasterResponse.db classifier.pkl
+If would You like to include Bayesian Hyperparameters tuning use '--optimize' flag:
+    > python train_classifier.py ../data/DisasterResponse.db classifier.pkl --optimize''')
 
 
 if __name__ == '__main__':
