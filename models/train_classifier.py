@@ -119,7 +119,7 @@ def save_model(model, model_filepath):
 def main():
     if len(sys.argv) in [3, 4]:
 
-        database_filepath, model_filepath = sys.argv[1:2]
+        database_filepath, model_filepath = sys.argv[1:3]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3)
