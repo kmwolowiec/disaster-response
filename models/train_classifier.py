@@ -71,8 +71,10 @@ def build_model(optimize=False):
     else:
         model = Pipeline([
             ('tfidf', TfidfVectorizer(tokenizer=tokenize, ngram_range=(1, 2))),
-            ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight="balanced", n_jobs=-1,
-                                                                 n_estimators=500, max_depth=5)))
+            ('clf', MultiOutputClassifier(RandomForestClassifier(class_weight="balanced",
+                                                                 n_jobs=-1,
+                                                                 n_estimators=500,
+                                                                 max_depth=5)))
         ], verbose=True)
 
         return model
