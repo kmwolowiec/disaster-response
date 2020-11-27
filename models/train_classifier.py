@@ -1,10 +1,7 @@
 import sys
 import sqlite3
-import re
 import pickle
-import os
 from datetime import datetime as dt
-import time
 
 import numpy as np
 import pandas as pd
@@ -12,8 +9,7 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.multioutput import MultiOutputClassifier
 from skopt import BayesSearchCV
@@ -21,7 +17,13 @@ from skopt.space import Real, Categorical, Integer
 from utils import tokenize
 
 
-def load_data(database_filepath):
+def load_data(database_filepath: str):
+    """Load data from database located in database_filepath.
+
+    Return (X, Y):
+        X - messages
+        Y - separated labels"""
+
 
     conn = sqlite3.connect(database_filepath)
     df = pd.read_sql('SELECT * FROM dataset', conn)
@@ -33,6 +35,16 @@ def load_data(database_filepath):
 # https://scikit-learn.org/stable/modules/multiclass.html#multiclass
 #https://github.com/scikit-learn-contrib/project-template/blob/master/skltemplate/_template.py
 def build_model(optimize=False):
+    """Build Scikit-Learn pipeline using TfidfVectorizer and RandomForestClassifier using
+      MultiOutputClassifier to handle multilabel classification task.
+
+    Parameters:
+        optimize - bool, default False. If Yes, than performs Bayesian Optimization for specified parameters.
+                   Warning! The optimization process takes a lot of time!
+
+    Return:
+        model object
+      """
 
     if optimize:
         model = Pipeline([
@@ -80,7 +92,15 @@ def build_model(optimize=False):
         return model
 
 
-def evaluate_model(model, X_test, Y_test):
+def evaluate_model(model, X_test, Y_test) -> pd.DataFrame:
+    """Perform prediction, calculate metrics (f1 score, precision, recall, accuracy)
+        and print evaluation report.
+
+    Return:
+        pd.DataFrame containing evaluation report.
+        The report is also saved in data/DistasterResponse.db in TrainingEvaluation table!
+        """
+
     Y_pred = model.predict(X_test)
     Y_pred = pd.DataFrame(Y_pred, columns=Y_test.columns)
 
@@ -115,6 +135,8 @@ def evaluate_model(model, X_test, Y_test):
 
 
 def save_model(model, model_filepath):
+    """Perform pickle dump of the model"""
+    
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
