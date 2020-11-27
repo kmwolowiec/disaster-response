@@ -68,7 +68,12 @@ def go():
 # web page that displays latest model parameters:
 @app.route('/model-info')
 def model_info():
-    model_params = model.best_estimator_._final_estimator.get_params()
+    try:
+        model_params = model.best_estimator_._final_estimator.get_params()
+
+    except AttributeError as e:
+        model_params = model._final_estimator.get_params()
+
     del model_params['estimator']
     return render_template('model-info.html', model_params=model_params)
 
