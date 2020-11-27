@@ -53,6 +53,13 @@ The structure of the repository is as follows:
 -utils.py               
  ```
 ## How to?
+
+### Clone repository
+```
+> git clone https://github.com/kmwolowiec/disaster-response.git
+> cd disaster-response
+```
+
 ### Environment
 If would You like to process data, train a model and launch the app, I recommend You to use environment I provided, using 
 [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
@@ -73,8 +80,7 @@ ETL pipeline cleans data and stores in database
 ### ML pipeline
 ML pipeline trains classifier and saves
 ```
-> cd models
-> python train_classifier.py ../data/DisasterResponse.db classifier.pkl
+> python models\train_classifier.py data\DisasterResponse.db models\classifier.pkl
 ```
 
 ### Launch Flask app locally
@@ -85,11 +91,13 @@ ML pipeline trains classifier and saves
 
 ### All steps together
 ```
-> cd data
-> python process_data.py disaster_messages.csv disaster_categories.csv DisasterResponse.db
-> cd ../models
-> python train_classifier.py ../data/DisasterResponse.db classifier.pkl
-> cd ../app
+> git clone https://github.com/kmwolowiec/disaster-response.git
+> cd disaster-response
+> conda env create -f environment.yml
+> conda activate disresp_py38
+> python data\process_data.py data\disaster_messages.csv data\disaster_categories.csv data\DisasterResponse.db
+> python models\train_classifier.py data\DisasterResponse.db models\classifier.pkl
+> cd app
 > flask run
 ```
 After running app You should go into http://127.0.0.1:5000/ in Your browser.
