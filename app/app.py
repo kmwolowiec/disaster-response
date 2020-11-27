@@ -1,15 +1,12 @@
 import json
 import plotly
-import pandas as pd
-import numpy as np
-
-from flask import Flask
-from flask import render_template, request
-from plotly.graph_objs import Bar, Scatter
 import pickle
+import pandas as pd
 from sqlalchemy import create_engine
-
+from flask import Flask, render_template, request
+from .plotting_helpers import generate_colors_for_plotting_series, make_eval_scatter_series, compose_plot
 #nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger', 'stopwords'])
+
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
 modelling_evals = pd.read_sql_table('TrainingEvaluation', engine)
 modelling_evals.sort_values('f1', ascending=False, inplace=True)
@@ -23,91 +20,33 @@ app = Flask(__name__)
 @app.route('/index')
 def index():
     
-    # extract data needed for visuals
+    # extract data needed for model evals visuals
     modelling_evals_gr = modelling_evals.groupby('training_timestamp')
+
+    # Assign colors to training dates by ordered mean f1 scores
     mean_f1_scores = modelling_evals_gr.f1.mean().sort_values(ascending=False)
+    colors = generate_colors_for_plotting_series(labels=mean_f1_scores.index)
 
-    scatters = []
-    colors_num = len(modelling_evals_gr)
-    colors = dict()
+    # Choose metrics to plot and its pretty names:
+    eval_metrics = {'f1': 'F1-score', 'rec': 'Recall', 'pr': 'Precision'}
 
-    reds = np.linspace(89, 125, colors_num)
-    greens = np.linspace(255, 95, colors_num)
-    blues = np.linspace(13, 92, colors_num)
+    # Generate graph_objs.Scatter for multiple series - each series is the training iteration:
+    scatters = {metric: [] for metric in eval_metrics.keys()}
+    for training_date_label, group_df in modelling_evals_gr:
 
-    for label, r, g, b in zip(mean_f1_scores.index, reds, greens, blues):
-        color = f'rgb({int(r)}, {int(g)}, {int(b)})'
-        colors[label] = color
+        # Compose separate scatter plots for each of eval_metrics:
+        for eval_colname, eval_pretty_name in eval_metrics.items():
+            scatter = make_eval_scatter_series(group_df, eval_colname=eval_colname, label=training_date_label,
+                                               label_color_dict=colors, metric_pretty_name=eval_pretty_name)
+            scatters[eval_colname].append(scatter)
 
-    for label, group in modelling_evals_gr:
-        scatter = Scatter(
-                    x=group['feature'].tolist(),
-                    y=group['f1'],
-                    mode="markers",
-                    text=group['training_timestamp'],
-                    name=label,
-                    meta=label,
-                    marker={'color': colors[label]},
-                    hovertemplate='Feature: %{x}<br>F1-score: %{y:.2f}<br>Date: %{meta}<extra></extra>',
-                    hoverinfo='text'
-                )
-        scatters.append(scatter)
+    graphs = [compose_plot(scatters[metric], title=eval_metrics[metric]) for metric in eval_metrics.keys()]
 
-    graphs = [
-        {
-            'data': scatters,
-            'layout': {
-                'title': False,
-                'yaxis': {
-                    'title': {
-                        'text': "F1-score",
-                        'font': {'size': 20}
-                    },
-                    'tickfont': {
-                        'size': 15
-                    },
-                },
-                'xaxis': {
-                    'title': {
-                        'text': "Message category",
-                        'font': {'size': 20}
-                    },
-                    'tickfont': {
-                        'size': 15
-                    },
-                    'tickangle': -45,
-                },
-                'margin': {
-                    'l': 50,
-                    'r': 50,
-                    'b': 170,
-                    't': 0,
-                    'pad': 2
-                },
-                'legend': {
-                    'title': {
-                        'text': 'Training date<br>(the greener, the better<br>models average F1-score)',
-                        'font': {'size': 18}
-                    },
-                    'font': {
-                        'size': 15
-                    }
-                },
-                'hovermode':    'closest',
-                'displayModeBar': False,
-                'hoverlabel': {
-                    'bgcolor': 'black',
-                    'font': {'size': 15}
-                }
-            }
-        }
-    ]
-    
-    # encode plotly graphs in JSON
+    # Encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
     
-    # render web page with plotly graphs
+    # Render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
 
@@ -116,11 +55,7 @@ def index():
 def go():
     query = request.args.get('query', '')
     classification_labels = model.predict([query])[0]
-    # classification_proba = model.predict_proba([query])
-    # classification_proba = [round(p[0][1] * 100, 2) for p in classification_proba]
     classification_results = dict(zip(labels, classification_labels))
-    #classification_results = dict(sorted(classification_results.items(), key=lambda item: -item[1]))
-    #classification_results = {f'{label} ({proba}%)': proba for label, proba in classification_results.items()}
 
     # This will render the go.html Please see that file. 
     return render_template(
@@ -130,16 +65,12 @@ def go():
     )
 
 
-# web page that handles user query and displays model results
+# web page that displays latest model parameters:
 @app.route('/model-info')
 def model_info():
     model_params = model.best_estimator_._final_estimator.get_params()
     del model_params['estimator']
-    # This will render the go.html Please see that file.
-    return render_template(
-        'model-info.html',
-        model_params=model_params
-    )
+    return render_template('model-info.html', model_params=model_params)
 
 
 def main():

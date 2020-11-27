@@ -1,8 +1,10 @@
 import re
+
 import nltk
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer, PorterStemmer
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer, PorterStemmer
+from nltk.tokenize import word_tokenize
+
 nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger', 'stopwords'])
 stop_words = stopwords.words('english')
 
