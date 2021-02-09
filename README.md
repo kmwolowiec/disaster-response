@@ -103,19 +103,6 @@ ML pipeline trains classifier and saves
 ```
 After running app You should go into `http://127.0.0.1:5000/` in Your browser.
 
-<style>
-[src*="#thumbnail"] {
-   width:90px;
-    vertical-align:middle;
-    horiz-align: right;
-}
-
-center {
-    align: center;
-}
-
-
-</style>
 
 
 ## Libraries 
