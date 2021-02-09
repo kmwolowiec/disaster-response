@@ -3,10 +3,7 @@
 Welcome to repository created on purpose of Disaster Response System.
 
 ## Motivation
-Novadays, social media became one of the most important medium of spread of disaster informations. Some of the posts
-can be classified as help requests. However, the requests may be connected with flood, earthquakes and many other different phenomenas.
-Hence, in order to make it easier to identify what actually happend, what is the need and which services should be informed,
-it seems quite usefull to provide system that would recognize the messages and categorize them.
+Nowadays, social media became one of the most important media for the spread of disaster information. Some of the posts can be classified as help requests. However, the requests may be connected with floods, earthquakes, and many other different phenomena. Hence, in order to make it easier to identify what actually happened, what is the need, and which services should be informed, it seems quite useful to provide a system that would recognize the messages and categorize them.
 
 That's what the project goal is.
 
